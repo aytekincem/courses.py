@@ -11,7 +11,7 @@ from neo4j.v1 import GraphDatabase, basic_auth
 app = Flask(__name__, static_url_path='/static/') #main web app objemiz.
 CORS(app)   #for cross domain.
 #password = os.getenv("NEO4J_PASSWORD")
-#change
+#change2
 
 driver = GraphDatabase.driver('bolt://localhost',auth=basic_auth("neo4j", 'cem'))
 
