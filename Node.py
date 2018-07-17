@@ -41,7 +41,7 @@ class Node(object):
         return "ok"
 
     def addAlternative(self):
-        creator="'Veli Aytekin'"
+        creator="'Veli Aytekin'"  #becareful to the surronding '   '
         link="'www.abc.com'"
         resource="'video'"
         driver = GraphDatabase.driver('bolt://localhost', auth=basic_auth("neo4j", 'cem'))
@@ -50,7 +50,19 @@ class Node(object):
         all_query = "MATCH (n) where n.title="+self.title+"CREATE (m:alternative { creator:"+creator+", link:"+link+", resource:"+resource+"   } ) CREATE (n)-[:hasAlternative]->(m)"
         print(all_query)
         results = db.run(all_query)
-        return "ok"
+        return "alternative added."
+
+    def addAssesment(self):
+        creator="'Ali Aytekin'"
+        link="'www.xyz.com'"
+        type="'multiple-choice'"
+        driver = GraphDatabase.driver('bolt://localhost', auth=basic_auth("neo4j", 'cem'))
+        if not hasattr(g, 'neo4j_db'):
+            db = driver.session()
+        all_query = "MATCH (n) where n.title=" + self.title + "CREATE (m:assesment { creator:" + creator + ", link:" + link + ", type:" + type + "   } ) CREATE (n)-[:hasAssesment]->(m)"
+        print(all_query)
+        results = db.run(all_query)
+        return "assesment added."
 
 
 
@@ -60,21 +72,44 @@ class Node(object):
 
 
 
-def deleteNode(title):
+def deleteAlternative(title):
         driver = GraphDatabase.driver('bolt://localhost', auth=basic_auth("neo4j", 'cem'))
         if not hasattr(g, 'neo4j_db'):
             db = driver.session()
         title="'"+title+"'"
 
-        query1="match (n)- [r:hasAlternative] - (m) where n.title= "+title+ " delete r,m UNION ALL"
-        query2=" match (n)- [r] - (m) where n.title="+title+" delete r,n"
-        all_query=query1+ " "+query2
-        print(all_query)
-        results = db.run(all_query)
-        es = Elasticsearch()
-        es.delete_by_query(index='courses', doc_type='node',body={ 'query': { 'match': { 'title': title } } })
-        return "ok"
+        query1="match (n)- [r:hasAlternative] - (m) where n.title= "+title+ " delete r,m"  # UNION ALL"
+        print(query1)
+        results = db.run(query1)
+        return "alternative deleted"
 
+
+def deleteAssesment(title):
+        driver = GraphDatabase.driver('bolt://localhost', auth=basic_auth("neo4j", 'cem'))
+        if not hasattr(g, 'neo4j_db'):
+            db = driver.session()
+        title = "'" + title + "'"
+
+        query1 = "match (n)- [r:hasAssesment] - (m) where n.title= " + title + " delete r,m"  # UNION ALL"
+        print(query1)
+        results = db.run(query1)
+        return "asessment deleted"
+
+def deleteNode(title):
+    driver = GraphDatabase.driver('bolt://localhost', auth=basic_auth("neo4j", 'cem'))
+    if not hasattr(g, 'neo4j_db'):
+        db = driver.session()
+
+    deleteAlternative(title)
+    deleteAssesment(title)
+
+    title = "'" + title + "'"
+    query1 = "match (n)- [r] - () where n.title= " + title + " delete r,n"
+    print(query1)
+    results = db.run(query1)
+    es = Elasticsearch()
+    es.delete_by_query(index='courses', doc_type='node',body={ 'query': { 'match': { 'title': title } } })
+    return "node deleted"
 
 def make_node(creator,label,link,pos,resource,title,type,tags,description):
 

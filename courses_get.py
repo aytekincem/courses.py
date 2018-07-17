@@ -96,7 +96,7 @@ def giveData():
 
 def getNodeInfo():
     db = get_db()
-    results = db.run("MATCH (n:course) where id(n)=22 RETURN n.label as label, n.title as title , n.creator as creator , n.link as link , n.pos as pos, n.resource as resource, n.type as type ")
+    results = db.run("MATCH (n:course) where id(n)=1 RETURN n.label as label, n.title as title , n.creator as creator , n.link as link , n.pos as pos, n.resource as resource, n.type as type ")
     nodes = []
     for record in results:
         label=record['label']
@@ -107,17 +107,21 @@ def getNodeInfo():
         resource = record['resource']
         type = record['type']
 
+    print(label," ",title," ",creator)
+
     es = Elasticsearch()
-    resp = es.search(index="courses", body={"query": {"match": {"_id": 22}}})
+    resp = es.search(index="courses", body={"query": {"match": {"_id": 1}}})
     for doc in resp['hits']['hits']:
         id = doc['_id']
         tags = doc['_source']['tags']  # tags type list.
         description = doc['_source']['description']
 
+    print(id," ",tags," ")
+
     alternative_nodes = []
 
     db = get_db()
-    query = "MATCH (n:course)-[:hasAlternative]->(alternative) WHERE id(n)=22 RETURN alternative.creator as al_creator,id(alternative) as al_id, alternative.link as al_link, alternative.resource as al_resource "
+    query = "MATCH (n:course)-[:hasAlternative]->(alternative) WHERE id(n)=1 RETURN alternative.creator as al_creator,id(alternative) as al_id, alternative.link as al_link, alternative.resource as al_resource "
     results = db.run(query)
     for record in results:
         al_id=record['al_id']
@@ -126,7 +130,7 @@ def getNodeInfo():
         al_resource = record['al_resource']
         alternative_node=Alternative.make_alternative(al_id,al_creator,al_link,al_resource)
         alternative_nodes.append(alternative_node)
-
+    print(al_creator)
 
     return "ok"
 
@@ -136,6 +140,8 @@ def makeNode():
     if(node.getPosition()!="start"):
         node.tieToTopic("A")
     node.addAlternative()
+    node.addAssesment()
+
     #node.addAlternative()
 
     return "ok"
